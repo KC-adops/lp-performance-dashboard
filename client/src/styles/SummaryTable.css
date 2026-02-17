@@ -1,0 +1,293 @@
+.unified-report-wrapper {
+    padding: 20px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.report-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    overflow-x: auto;
+    position: relative;
+    backdrop-filter: blur(10px);
+}
+
+.performance-unified-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    min-width: 1400px;
+}
+
+/* Header Styling */
+.performance-unified-table th {
+    padding: 12px 10px;
+    font-weight: 700;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.03);
+    letter-spacing: 0.05em;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    vertical-align: middle;
+}
+
+/* Merchant Indicators */
+.merchant-indicator.acom {
+    background: #ff4d4d;
+}
+
+/* Red */
+.merchant-indicator.promise {
+    background: #4d79ff;
+}
+
+/* Blue */
+.merchant-indicator.mobit {
+    background: #2eb82e;
+}
+
+/* Green */
+.merchant-indicator.aiful {
+    background: #8b4513;
+}
+
+/* Brown */
+
+.main-header-row th {
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    border-bottom: 2px solid var(--accent-primary);
+}
+
+.main-header-row th.est-header {
+    background: rgba(99, 102, 241, 0.1);
+    border-bottom: 2px solid var(--error);
+}
+
+.sub-header-row th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(5px);
+}
+
+/* Group Colors */
+.group-total {
+    border-top: 3px solid var(--premium-blue);
+}
+
+.group-mcv {
+    border-top: 3px solid #3b82f6;
+}
+
+.group-rcv {
+    border-top: 3px solid #6366f1;
+}
+
+.group-results {
+    border-top: 3px solid #10b981;
+}
+
+.group-financial {
+    border-top: 3px solid #f59e0b;
+}
+
+.group-estimated {
+    border-top: 3px solid var(--premium-purple);
+}
+
+/* Cell Styling */
+.performance-unified-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    text-align: right;
+    font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+}
+
+.performance-unified-table tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* Special Columns */
+.sticky-col {
+    position: sticky;
+    left: 0;
+    background: var(--bg-card);
+    z-index: 5;
+    text-align: left !important;
+    font-weight: 700;
+    min-width: 120px;
+    border-right: 2px solid var(--border-color) !important;
+}
+
+.total-group-col,
+.total-val-cell {
+    background: rgba(59, 130, 246, 0.02);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.border-right {
+    border-right: 2px solid var(--border-color) !important;
+}
+
+/* Value Types */
+.val-cell {
+    color: var(--text-primary);
+}
+
+.est-val {
+    color: var(--premium-purple);
+    opacity: 0.9;
+}
+
+.highlight-roas {
+    color: var(--text-primary) !important;
+}
+
+.highlight-roas-val {
+    color: var(--text-primary);
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.highlight-roas-est {
+    color: var(--premium-purple) !important;
+}
+
+.highlight-roas-est-val {
+    color: var(--premium-purple);
+    font-weight: 800;
+    background: rgba(139, 92, 246, 0.05);
+}
+
+/* Merchant Indicator in Table Cell */
+.merchant-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.merchant-indicator {
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+}
+
+/* Grand Total Row */
+.grand-total-row td {
+    background: rgba(255, 255, 255, 0.05) !important;
+    font-weight: 800;
+    border-top: 2px solid var(--premium-blue);
+    color: var(--text-primary);
+}
+
+/* Custom Scrollbar for the report container */
+.report-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.report-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.report-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.report-container::-webkit-scrollbar-thumb:hover {
+    background: var(--premium-blue);
+}
+
+/* Editable Table Inputs */
+.editable-cell {
+    position: relative;
+    padding: 0 !important;
+}
+
+.input-with-unit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 2px;
+    gap: 2px;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.unit-label {
+    opacity: 0.7;
+}
+
+.table-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 0;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    padding: 1px 2px;
+    width: 48px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.table-input:hover {
+    border-bottom-color: var(--premium-blue);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.table-input:focus {
+    outline: none;
+    border-bottom: 1px solid var(--premium-blue);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.table-input.est {
+    color: var(--premium-purple);
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
+.table-input.est:hover {
+    border-bottom-color: var(--premium-purple);
+}
+
+.table-input.est:focus {
+    border-bottom-color: var(--premium-purple);
+}
+
+/* Hide Spinners for Chrome, Safari, Edge, Opera */
+.table-input::-webkit-outer-spin-button,
+.table-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Hide Spinners for Firefox */
+.table-input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.highlight-editable {
+    background: rgba(59, 130, 246, 0.03) !important;
+    position: relative;
+}
+
+.highlight-editable::after {
+    content: '✎';
+    margin-left: 4px;
+    font-size: 0.6rem;
+    opacity: 0.6;
+}
