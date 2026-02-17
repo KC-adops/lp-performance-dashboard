@@ -159,7 +159,7 @@ const Dashboard = () => {
                             成果表
                         </a>
                         <a
-                            href="https://docs.google.com/spreadsheets/d/126YC_j6a2mSPL0othVx1Ey8JoHngIjNtgn_IHrHz3R0/edit"
+                            href="https://docs.google.com/spreadsheets/d/1mXNkk0X_PX-HgstESN33W0nKT-4aYBTb7iVRzRcNH_M/edit"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="sheets-link-button cost-sheet-link"
