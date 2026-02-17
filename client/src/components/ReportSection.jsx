@@ -4,7 +4,14 @@ import SummaryTable from './SummaryTable';
 import { filterData, aggregateMetrics, aggregateByMerchant } from '../utils/calculations';
 import { downloadCSV } from '../utils/csvExport';
 
-const ReportSection = ({ sectionName, processedData, filterOptions }) => {
+const ReportSection = ({ sectionId, sectionName, processedData, filterOptions }) => {
+    // Keys for localStorage
+    const STORAGE_KEYS = {
+        unitPrices: `lp_dashboard_${sectionId}_unit_prices`,
+        unitEstRates: `lp_dashboard_${sectionId}_est_rates`,
+        diffRate: `lp_dashboard_${sectionId}_diff_rate`
+    };
+
     const [filters, setFilters] = useState({
         startDate: '',
         endDate: '',
@@ -16,22 +23,30 @@ const ReportSection = ({ sectionName, processedData, filterOptions }) => {
 
     const [appliedFilters, setAppliedFilters] = useState(filters);
 
-    const [unitPrices, setUnitPrices] = useState({
-        acom: 65000,
-        promise: 62000,
-        mobit: 16000,
-        aiful: 50161
+    const [unitPrices, setUnitPrices] = useState(() => {
+        const saved = localStorage.getItem(STORAGE_KEYS.unitPrices);
+        return saved ? JSON.parse(saved) : {
+            acom: 65000,
+            promise: 62000,
+            mobit: 16000,
+            aiful: 50161
+        };
     });
 
-    const [unitEstRates, setUnitEstRates] = useState({
-        acom: 20.0,
-        promise: 20.0,
-        mobit: 80.0,
-        aiful: 20.0
+    const [unitEstRates, setUnitEstRates] = useState(() => {
+        const saved = localStorage.getItem(STORAGE_KEYS.unitEstRates);
+        return saved ? JSON.parse(saved) : {
+            acom: 20.0,
+            promise: 20.0,
+            mobit: 80.0,
+            aiful: 20.0
+        };
     });
 
-    const [diffRate, setDiffRate] = useState(0);
-    const [diffRate2, setDiffRate2] = useState(0);
+    const [diffRate, setDiffRate] = useState(() => {
+        const saved = localStorage.getItem(STORAGE_KEYS.diffRate);
+        return saved ? parseFloat(saved) : 0;
+    });
 
     const [metrics, setMetrics] = useState({
         mCV: 0,
@@ -49,6 +64,19 @@ const ReportSection = ({ sectionName, processedData, filterOptions }) => {
     });
 
     const [merchantData, setMerchantData] = useState([]);
+
+    // Save to localStorage whenever values change
+    useEffect(() => {
+        localStorage.setItem(STORAGE_KEYS.unitPrices, JSON.stringify(unitPrices));
+    }, [unitPrices, STORAGE_KEYS.unitPrices]);
+
+    useEffect(() => {
+        localStorage.setItem(STORAGE_KEYS.unitEstRates, JSON.stringify(unitEstRates));
+    }, [unitEstRates, STORAGE_KEYS.unitEstRates]);
+
+    useEffect(() => {
+        localStorage.setItem(STORAGE_KEYS.diffRate, diffRate.toString());
+    }, [diffRate, STORAGE_KEYS.diffRate]);
 
     useEffect(() => {
         const filtered = filterData(processedData, appliedFilters);
@@ -82,12 +110,12 @@ const ReportSection = ({ sectionName, processedData, filterOptions }) => {
             '商材名': row.merchant?.toUpperCase(),
             'mCV': row.mCV,
             'rCV': row.rCV,
-            'rCVR': row.rCVR + '%',
+            'rCVR': row.rCVR.toFixed(2) + '%',
             '成果数': row.results,
-            '成果率': row.conversionRate + '%',
+            '成果率': row.conversionRate.toFixed(2) + '%',
             '単価': unitPrices[row.merchant?.toLowerCase()] || 0,
             '許容CPA': row.allowableCpaPerItem,
-            '成果率(想定)': unitEstRates[row.merchant?.toLowerCase()] || 0 + '%',
+            '成果率(想定)': (unitEstRates[row.merchant?.toLowerCase()] || 0).toFixed(2) + '%',
             '許容CPA(想定)': row.estAllowableCpa
         }));
 
@@ -96,9 +124,9 @@ const ReportSection = ({ sectionName, processedData, filterOptions }) => {
             '商材名': 'TOTAL',
             'mCV': metrics.mCV,
             'rCV': metrics.rCV,
-            'rCVR': metrics.rCVR + '%',
+            'rCVR': metrics.rCVR.toFixed(2) + '%',
             '成果数': metrics.results,
-            '成果率': metrics.conversionRate + '%',
+            '成果率': metrics.conversionRate.toFixed(2) + '%',
             '単価': '-',
             '許容CPA': metrics.allowableCpa,
             '成果率(想定)': '-',
@@ -131,11 +159,9 @@ const ReportSection = ({ sectionName, processedData, filterOptions }) => {
                 unitPrices={unitPrices}
                 unitEstRates={unitEstRates}
                 diffRate={diffRate}
-                diffRate2={diffRate2}
                 onUnitPriceChange={handleUnitPriceChange}
                 onEstRateChange={handleEstRateChange}
                 onDiffRateChange={setDiffRate}
-                onDiffRateChange2={setDiffRate2}
             />
         </section>
     );

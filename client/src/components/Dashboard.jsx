@@ -105,6 +105,7 @@ const Dashboard = () => {
             <div className="dashboard-content">
                 <main className="main-content">
                     <ReportSection
+                        sectionId="a"
                         sectionName="SCENARIO A"
                         processedData={processedData}
                         filterOptions={filterOptions}
@@ -113,6 +114,7 @@ const Dashboard = () => {
                     <div className="section-divider"></div>
 
                     <ReportSection
+                        sectionId="b"
                         sectionName="SCENARIO B"
                         processedData={processedData}
                         filterOptions={filterOptions}
