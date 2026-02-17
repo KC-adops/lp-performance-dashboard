@@ -6,8 +6,10 @@ const SummaryTable = ({
     groupedData,
     unitPrices,
     unitEstRates,
+    diffRate,
     onUnitPriceChange,
-    onEstRateChange
+    onEstRateChange,
+    onDiffRateChange
 }) => {
     const fmtCurrency = (val) => {
         if (val === undefined || val === null || isNaN(val)) return '-';
@@ -28,6 +30,8 @@ const SummaryTable = ({
         return <div className="no-data">表示するデータがありません。</div>;
     }
 
+    const estAllowableCpaAdjusted = metrics.estAllowableCpa * (1 + (diffRate || 0) / 100);
+
     return (
         <div className="unified-report-wrapper">
             <div className="report-container">
@@ -36,7 +40,7 @@ const SummaryTable = ({
                         <tr className="main-header-row">
                             <th className="sticky-col"></th>
                             <th colSpan={12}>実績</th>
-                            <th colSpan={3} className="est-header">想定</th>
+                            <th colSpan={5} className="est-header">想定</th>
                         </tr>
                         <tr className="sub-header-row">
                             <th className="sticky-col">商材名</th>
@@ -59,6 +63,8 @@ const SummaryTable = ({
 
                             <th className="metric-col est highlight-editable">成果率<br />(想定)</th>
                             <th className="metric-col est">許容CPA<br />(想定)</th>
+                            <th className="metric-col est-highlight highlight-editable">差分率</th>
+                            <th className="metric-col est-highlight">許容CPA<br />(想定)_差分込み</th>
                             <th className="metric-col est highlight-roas-est">ROAS<br />(想定)</th>
                         </tr>
                     </thead>
@@ -111,6 +117,8 @@ const SummaryTable = ({
                                         </div>
                                     </td>
                                     <td className="val-cell est-val">{fmtCurrency(row.estAllowableCpa)}</td>
+                                    <td className="val-cell est-val">-</td>
+                                    <td className="val-cell est-val">-</td>
                                     <td className="val-cell highlight-roas-est-val">-</td>
                                 </tr>
                             );
@@ -138,6 +146,23 @@ const SummaryTable = ({
 
                             <td className="val-cell est-val">-</td>
                             <td className="val-cell est-val">{fmtCurrency(metrics.estAllowableCpa)}</td>
+
+                            <td className="val-cell est-val editable-cell">
+                                <div className="input-with-unit">
+                                    <input
+                                        type="number"
+                                        step="0.1"
+                                        className="table-input est"
+                                        value={diffRate}
+                                        onChange={(e) => onDiffRateChange(Number(e.target.value))}
+                                    />
+                                    <span className="unit-label">%</span>
+                                </div>
+                            </td>
+                            <td className="val-cell est-val" style={{ fontWeight: 800, background: 'rgba(139, 92, 246, 0.1)' }}>
+                                {fmtCurrency(estAllowableCpaAdjusted)}
+                            </td>
+
                             <td className="val-cell highlight-roas-est-val">{fmtPercent(metrics.estRoas)}</td>
                         </tr>
                     </tfoot>

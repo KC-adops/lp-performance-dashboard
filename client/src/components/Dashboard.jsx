@@ -110,6 +110,8 @@ const Dashboard = () => {
         aiful: 20.0
     });
 
+    const [diffRate, setDiffRate] = useState(0);
+
     // Apply filters whenever appliedFilters change or editable metrics change
     useEffect(() => {
         const filtered = filterData(processedData, appliedFilters);
@@ -177,23 +179,22 @@ const Dashboard = () => {
             </header>
 
             <div className="dashboard-content">
-                <aside className="sidebar">
+                <main className="main-content">
                     <Filters
                         filters={filters}
                         setFilters={setFilters}
                         options={filterOptions}
                         onApply={handleApplyFilters}
                     />
-                </aside>
-
-                <main className="main-content">
                     <SummaryTable
                         metrics={metrics}
                         groupedData={merchantData}
                         unitPrices={unitPrices}
                         unitEstRates={unitEstRates}
+                        diffRate={diffRate}
                         onUnitPriceChange={handleUnitPriceChange}
                         onEstRateChange={handleEstRateChange}
+                        onDiffRateChange={setDiffRate}
                     />
                 </main>
             </div>

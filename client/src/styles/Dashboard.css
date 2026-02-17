@@ -89,23 +89,13 @@
 }
 
 .dashboard-content {
-    display: flex;
+    display: block;
     flex: 1;
-    overflow: hidden;
-}
-
-.sidebar {
-    width: 320px;
-    background: var(--bg-secondary);
-    border-right: 1px solid var(--border-color);
-    padding: var(--spacing-lg);
     overflow-y: auto;
 }
 
 .main-content {
-    flex: 1;
-    padding: var(--spacing-lg);
-    overflow-y: auto;
+    padding: var(--spacing-md) var(--spacing-xl);
     background: var(--bg-primary);
 }
 
