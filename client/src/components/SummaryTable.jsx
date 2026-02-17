@@ -73,7 +73,7 @@ const SummaryTable = ({
                                     </td>
 
                                     <td className="val-cell">{fmtNumber(row.mCV)}</td>
-                                    <td className="val-cell">{fmtCurrency(row.mCPA)}</td>
+                                    <td className="val-cell">-</td>
 
                                     <td className="val-cell">{fmtNumber(row.rCV)}</td>
                                     <td className="val-cell">{fmtPercent(row.rCVR)}</td>
@@ -93,10 +93,10 @@ const SummaryTable = ({
                                         </div>
                                     </td>
                                     <td className="val-cell">{fmtCurrency(row.allowableCpaPerItem)}</td>
-                                    <td className="val-cell">{fmtCurrency(row.rCPA)}</td>
+                                    <td className="val-cell">-</td>
 
-                                    <td className="val-cell">{fmtCurrency(row.cost)}</td>
-                                    <td className="val-cell highlight-roas-val">{fmtPercent(row.actualRoas)}</td>
+                                    <td className="val-cell">-</td>
+                                    <td className="val-cell highlight-roas-val">-</td>
 
                                     <td className="val-cell est-val editable-cell">
                                         <div className="input-with-unit">
