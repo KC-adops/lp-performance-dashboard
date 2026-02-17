@@ -20,11 +20,23 @@
     border-spacing: 0;
     font-size: 0.85rem;
     color: var(--text-primary);
-    min-width: 1550px;
+    min-width: 1800px;
 }
 
-.est-highlight {
-    background: rgba(139, 92, 246, 0.05) !important;
+.border-left {
+    border-left: 2px solid var(--border-color) !important;
+}
+
+.border-right {
+    border-right: 2px solid var(--border-color) !important;
+}
+
+.est-highlight-1 {
+    background: rgba(139, 92, 246, 0.08) !important;
+}
+
+.est-highlight-2 {
+    background: rgba(16, 185, 129, 0.08) !important;
 }
 
 /* Header Styling */
