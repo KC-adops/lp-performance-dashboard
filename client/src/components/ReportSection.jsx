@@ -109,31 +109,47 @@ const ReportSection = ({ sectionId, sectionName, processedData, filterOptions })
         const exportData = merchantData.map(row => ({
             '商材名': row.merchant?.toUpperCase(),
             'mCV': row.mCV,
+            'mCPA': Math.round(row.mCPA || 0),
             'rCV': row.rCV,
             'rCVR': row.rCVR.toFixed(2) + '%',
             '成果数': row.results,
             '成果率': row.conversionRate.toFixed(2) + '%',
             '単価': unitPrices[row.merchant?.toLowerCase()] || 0,
-            '許容CPA': row.allowableCpaPerItem,
+            '許容CPA': Math.round(row.allowableCpaPerItem || 0),
+            '許容CPA_差分込み': Math.round((row.allowableCpaPerItem || 0) * (1 + (diffRate || 0) / 100)),
+            'rCPA': Math.round(row.rCPA || 0),
+            '広告費': Math.round(row.cost || 0),
+            'ROAS(実績)': row.actualRoas.toFixed(2) + '%',
             '成果率(想定)': (unitEstRates[row.merchant?.toLowerCase()] || 0).toFixed(2) + '%',
-            '許容CPA(想定)': row.estAllowableCpa
+            '許容CPA(想定)': Math.round(row.estAllowableCpa || 0),
+            '差分率': diffRate + '%',
+            '許容CPA(想定)_差分込み': Math.round((row.estAllowableCpa || 0) * (1 + (diffRate || 0) / 100)),
+            'ROAS(想定)': row.estRoas.toFixed(2) + '%'
         }));
 
         // Add Total row
         exportData.push({
             '商材名': 'TOTAL',
             'mCV': metrics.mCV,
+            'mCPA': Math.round(metrics.mCPA || 0),
             'rCV': metrics.rCV,
             'rCVR': metrics.rCVR.toFixed(2) + '%',
             '成果数': metrics.results,
             '成果率': metrics.conversionRate.toFixed(2) + '%',
             '単価': '-',
-            '許容CPA': metrics.allowableCpa,
+            '許容CPA': Math.round(metrics.allowableCpa || 0),
+            '許容CPA_差分込み': Math.round((metrics.allowableCpa || 0) * (1 + (diffRate || 0) / 100)),
+            'rCPA': Math.round(metrics.rCPA || 0),
+            '広告費': Math.round(metrics.cost || 0),
+            'ROAS(実績)': metrics.actualRoas.toFixed(2) + '%',
             '成果率(想定)': '-',
-            '許容CPA(想定)': metrics.estAllowableCpa
+            '許容CPA(想定)': Math.round(metrics.estAllowableCpa || 0),
+            '差分率': diffRate + '%',
+            '許容CPA(想定)_差分込み': Math.round((metrics.estAllowableCpa || 0) * (1 + (diffRate || 0) / 100)),
+            'ROAS(想定)': metrics.estRoas.toFixed(2) + '%'
         });
 
-        downloadCSV(exportData, `${sectionName}_report.csv`);
+        downloadCSV(exportData, `${sectionName}_report_${new Date().toISOString().split('T')[0]}.csv`);
     };
 
     return (

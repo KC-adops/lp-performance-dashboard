@@ -127,18 +127,27 @@ export const calculateCosts = (summaryData, pvData, costData) => {
  */
 export const aggregateByMerchant = (data, unitPrices = UNIT_PRICES, unitEstRates = UNIT_EST_RATES) => {
     const merchantStats = {};
+    const standardMerchants = ['acom', 'promise', 'mobit', 'aiful'];
+
+    // Initialize all standard merchants with 0 values
+    standardMerchants.forEach(m => {
+        merchantStats[m] = { merchant: m, mCV: 0, rCV: 0, results: 0, cost: 0 };
+    });
+
     let totalRCV = 0;
 
     data.forEach(item => {
-        const m = item.merchant;
-        if (!merchantStats[m]) {
-            merchantStats[m] = { merchant: m, mCV: 0, rCV: 0, results: 0, cost: 0 };
+        const m = item.merchant?.toLowerCase();
+        if (m) {
+            if (!merchantStats[m]) {
+                merchantStats[m] = { merchant: m, mCV: 0, rCV: 0, results: 0, cost: 0 };
+            }
+            merchantStats[m].mCV += item.mCV || 0;
+            merchantStats[m].rCV += item.rCV || 0;
+            merchantStats[m].results += item.results || 0;
+            merchantStats[m].cost += item.cost || 0;
+            totalRCV += item.rCV || 0;
         }
-        merchantStats[m].mCV += item.mCV || 0;
-        merchantStats[m].rCV += item.rCV || 0;
-        merchantStats[m].results += item.results || 0;
-        merchantStats[m].cost += item.cost || 0;
-        totalRCV += item.rCV || 0;
     });
 
     const sortOrder = ['acom', 'promise', 'mobit', 'aiful'];
