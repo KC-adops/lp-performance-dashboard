@@ -18,6 +18,7 @@ const Dashboard = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [isUsingMock, setIsUsingMock] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
