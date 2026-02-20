@@ -26,17 +26,17 @@ export const fetchSheetData = async (sheetName, range = '', spreadsheetId = SPRE
     const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours limit on the hard cache, but we rely on forceRefresh for SWR
 
     if (!forceRefresh) {
-        const cachedStr = await getCache(cacheKey);
-        if (cachedStr) {
-            try {
+        try {
+            const cachedStr = await getCache(cacheKey);
+            if (cachedStr) {
                 const parsed = JSON.parse(cachedStr);
                 if (Date.now() - parsed.timestamp < CACHE_TTL_MS) {
                     console.log(`Using IndexedDB cached data for ${sheetName}`);
                     return parsed.values;
                 }
-            } catch (e) {
-                console.warn('Cache parsing failed', e);
             }
+        } catch (e) {
+            console.warn(`Cache skip for ${sheetName} due to error:`, e);
         }
     }
 

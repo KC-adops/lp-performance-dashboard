@@ -24,36 +24,44 @@ const Dashboard = () => {
         let isMounted = true;
 
         const loadData = async () => {
+            // Safe phase 1: Try cache
             try {
-                // SWR Phase 1: Try Cache
                 setIsLoading(true);
-                const [summaryCache, costCache] = await Promise.all([
+                const results = await Promise.allSettled([
                     fetchSummaryReport(false, true),
                     fetchCostData(false, true)
                 ]);
 
                 if (!isMounted) return;
 
-                const hasCache = summaryCache.length > 0;
+                const summaryCache = results[0].status === 'fulfilled' ? (results[0].value || []) : [];
+                const costCache = results[1].status === 'fulfilled' ? (results[1].value || []) : [];
+
+                const hasCache = Array.isArray(summaryCache) && summaryCache.length > 0;
 
                 if (hasCache) {
-                    const pv = [];
-                    const withCosts = calculateCosts(summaryCache, pv, costCache);
-                    setProcessedData(withCosts);
-                    setFilterOptions({
-                        media: [...new Set(summaryCache.map(item => item.media))].filter(Boolean),
-                        method: [...new Set(summaryCache.map(item => item.method))].filter(Boolean),
-                        method2: [...new Set(summaryCache.map(item => item.method2))].filter(Boolean),
-                        lp_number: sortLPNumbers([...new Set(summaryCache.map(item => item.lp_number))].filter(Boolean))
-                    });
-                    setIsLoading(false); // Hide skeleton
-                    setIsRefreshing(true); // Show refreshing badge
-                } else {
-                    // Absolute first load, we must keep isLoading=true to show skeleton
-                    setIsLoading(true);
+                    try {
+                        const pv = [];
+                        const withCosts = calculateCosts(summaryCache, pv, costCache);
+                        setProcessedData(withCosts);
+                        setFilterOptions({
+                            media: [...new Set(summaryCache.map(item => item.media))].filter(Boolean),
+                            method: [...new Set(summaryCache.map(item => item.method))].filter(Boolean),
+                            method2: [...new Set(summaryCache.map(item => item.method2))].filter(Boolean),
+                            lp_number: sortLPNumbers([...new Set(summaryCache.map(item => item.lp_number))].filter(Boolean))
+                        });
+                        setIsLoading(false);
+                        setIsRefreshing(true);
+                    } catch (renderError) {
+                        console.error('Error processing cached data:', renderError);
+                    }
                 }
+            } catch (cacheError) {
+                console.warn('Silent cache load error:', cacheError);
+            }
 
-                // SWR Phase 2: Fetch Fresh Network Data
+            // Safe phase 2: Force network refresh
+            try {
                 const [summaryFresh, costFresh] = await Promise.all([
                     fetchSummaryReport(true, false),
                     fetchCostData(true, false)
@@ -63,26 +71,31 @@ const Dashboard = () => {
 
                 const pvFresh = [];
 
-                if (summaryFresh.length > 0 &&
-                    summaryFresh[0].date === '2025-01-28' &&
-                    summaryFresh[0].lp_number === 'LP001' &&
-                    summaryFresh[0].merchant === 'acom') {
-                    setIsUsingMock(true);
-                } else {
-                    setIsUsingMock(false);
-                }
+                if (Array.isArray(summaryFresh) && summaryFresh.length > 0) {
+                    if (summaryFresh[0].date === '2025-01-28' &&
+                        summaryFresh[0].lp_number === 'LP001' &&
+                        summaryFresh[0].merchant === 'acom') {
+                        setIsUsingMock(true);
+                    } else {
+                        setIsUsingMock(false);
+                    }
 
-                const withCostsFresh = calculateCosts(summaryFresh, pvFresh, costFresh);
-                setProcessedData(withCostsFresh);
-                setFilterOptions({
-                    media: [...new Set(summaryFresh.map(item => item.media))].filter(Boolean),
-                    method: [...new Set(summaryFresh.map(item => item.method))].filter(Boolean),
-                    method2: [...new Set(summaryFresh.map(item => item.method2))].filter(Boolean),
-                    lp_number: sortLPNumbers([...new Set(summaryFresh.map(item => item.lp_number))].filter(Boolean))
-                });
+                    const withCostsFresh = calculateCosts(summaryFresh, pvFresh, costFresh);
+                    setProcessedData(withCostsFresh);
+                    setFilterOptions({
+                        media: [...new Set(summaryFresh.map(item => item.media))].filter(Boolean),
+                        method: [...new Set(summaryFresh.map(item => item.method))].filter(Boolean),
+                        method2: [...new Set(summaryFresh.map(item => item.method2))].filter(Boolean),
+                        lp_number: sortLPNumbers([...new Set(summaryFresh.map(item => item.lp_number))].filter(Boolean))
+                    });
+                } else if (isMounted && processedData.length === 0) {
+                    setError('表示するデータが見つかりませんでした。API設定を確認してください。');
+                }
             } catch (err) {
-                console.error('Error loading data:', err);
-                if (isMounted) setError('データの読み込みに失敗しました。');
+                console.error('Error loading fresh data:', err);
+                if (isMounted && processedData.length === 0) {
+                    setError('データの読み込みに失敗しました。ネットワーク接続を確認してください。');
+                }
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
