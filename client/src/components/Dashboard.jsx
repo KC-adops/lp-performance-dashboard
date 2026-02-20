@@ -24,6 +24,14 @@ const Dashboard = () => {
         let isMounted = true;
 
         const loadData = async () => {
+            // Absolute safety: stop loading after 15s no matter what
+            const safetyTimeout = setTimeout(() => {
+                if (isMounted && isLoading) {
+                    console.warn('Dashboard loading safety timeout triggered');
+                    setIsLoading(false);
+                }
+            }, 15000);
+
             // Safe phase 1: Try cache
             try {
                 setIsLoading(true);
@@ -32,14 +40,15 @@ const Dashboard = () => {
                     fetchCostData(false, true)
                 ]);
 
-                if (!isMounted) return;
+                if (!isMounted) {
+                    clearTimeout(safetyTimeout);
+                    return;
+                }
 
                 const summaryCache = results[0].status === 'fulfilled' ? (results[0].value || []) : [];
                 const costCache = results[1].status === 'fulfilled' ? (results[1].value || []) : [];
 
-                const hasCache = Array.isArray(summaryCache) && summaryCache.length > 0;
-
-                if (hasCache) {
+                if (Array.isArray(summaryCache) && summaryCache.length > 0) {
                     try {
                         const pv = [];
                         const withCosts = calculateCosts(summaryCache, pv, costCache);
@@ -62,14 +71,18 @@ const Dashboard = () => {
 
             // Safe phase 2: Force network refresh
             try {
-                const [summaryFresh, costFresh] = await Promise.all([
+                const networkResults = await Promise.allSettled([
                     fetchSummaryReport(true, false),
                     fetchCostData(true, false)
                 ]);
 
-                if (!isMounted) return;
+                if (!isMounted) {
+                    clearTimeout(safetyTimeout);
+                    return;
+                }
 
-                const pvFresh = [];
+                const summaryFresh = networkResults[0].status === 'fulfilled' ? networkResults[0].value : null;
+                const costFresh = networkResults[1].status === 'fulfilled' ? networkResults[1].value : [];
 
                 if (Array.isArray(summaryFresh) && summaryFresh.length > 0) {
                     if (summaryFresh[0].date === '2025-01-28' &&
@@ -80,6 +93,7 @@ const Dashboard = () => {
                         setIsUsingMock(false);
                     }
 
+                    const pvFresh = [];
                     const withCostsFresh = calculateCosts(summaryFresh, pvFresh, costFresh);
                     setProcessedData(withCostsFresh);
                     setFilterOptions({
@@ -88,15 +102,16 @@ const Dashboard = () => {
                         method2: [...new Set(summaryFresh.map(item => item.method2))].filter(Boolean),
                         lp_number: sortLPNumbers([...new Set(summaryFresh.map(item => item.lp_number))].filter(Boolean))
                     });
-                } else if (isMounted && processedData.length === 0) {
-                    setError('表示するデータが見つかりませんでした。API設定を確認してください。');
+                } else if (isMounted && !processedData.length) {
+                    setError('表示するデータが見つかりませんでした。APIキーが正しいか、またはスプレッドシートが共有されているか確認してください。');
                 }
             } catch (err) {
                 console.error('Error loading fresh data:', err);
-                if (isMounted && processedData.length === 0) {
-                    setError('データの読み込みに失敗しました。ネットワーク接続を確認してください。');
+                if (isMounted && !processedData.length) {
+                    setError('データの読み込みに失敗しました。オフラインか、ネットワークエラーが発生しています。');
                 }
             } finally {
+                clearTimeout(safetyTimeout);
                 if (isMounted) {
                     setIsLoading(false);
                     setIsRefreshing(false);

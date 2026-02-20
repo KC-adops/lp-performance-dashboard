@@ -46,7 +46,12 @@ export const fetchSheetData = async (sheetName, range = '', spreadsheetId = SPRE
         const fullRange = range ? `${sheetName}!${range}` : sheetName;
         const url = `${BASE_URL}/${spreadsheetId}/values/${encodeURIComponent(fullRange)}?key=${API_KEY}`;
 
-        const response = await fetch(url);
+        // Create a controller for aborting the fetch after a timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
             const errorData = await response.json();
@@ -68,7 +73,11 @@ export const fetchSheetData = async (sheetName, range = '', spreadsheetId = SPRE
 
         return values;
     } catch (error) {
-        console.error(`Error fetching sheet "${sheetName}":`, error);
+        if (error.name === 'AbortError') {
+            console.error(`Request for sheet "${sheetName}" timed out after 10s`);
+        } else {
+            console.error(`Error fetching sheet "${sheetName}":`, error);
+        }
         throw error;
     }
 };
