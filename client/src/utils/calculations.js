@@ -40,85 +40,101 @@ const normalize = (str) => {
  * Strictly refers to the consolidated cost sheet and ignores '未振分' (unassigned) rows.
  */
 export const calculateCosts = (summaryData, pvData, costData) => {
-    // Note: pvData is ignored as per user confirmation to rely solely on the cost sheet.
+    if (!summaryData || !costData) return summaryData || [];
 
-    // Create a granular map for cost matching with normalization
+    // Pre-normalize summary data once
+    const normalizedSummary = summaryData.map(record => ({
+        ...record,
+        _norm_date: normalize(record.date),
+        _norm_media: normalize(record.media),
+        _norm_lp: normalize(record.lp_number),
+        _norm_method: normalize(record.method),
+        _norm_method2: normalize(record.method2)
+    }));
+
+    // Pre-normalize cost data once
+    const normalizedCost = costData.map(item => ({
+        ...item,
+        _norm_lp: normalize(item.lp_number),
+        _norm_date: normalize(item.date),
+        _norm_media: normalize(item.media),
+        _norm_method: normalize(item.method),
+        _norm_method2: normalize(item.method2)
+    }));
+
+    // Create maps for O(1) lookups
     const costMap = {};
-    const mediaCostMap = {}; // Broad fallback for rows that have media/date but maybe no specific LP/Method
+    const mediaCostMap = {};
+    const summaryCountMap = {};
+    const assignedMediaCostMap = {};
+    const unmatchedMediaCountMap = {};
 
-    costData.forEach(item => {
-        const lp = normalize(item.lp_number);
-        // Exclude '未振分' (unassigned) rows as per user request
+    normalizedCost.forEach(item => {
+        const lp = item._norm_lp;
         if (lp === '未振分' || lp === 'none' || lp === '') return;
 
-        const d = normalize(item.date);
-        const m = normalize(item.media);
-        const meth = normalize(item.method);
-        const meth2 = normalize(item.method2);
+        const d = item._norm_date;
+        const m = item._norm_media;
+        const meth = item._norm_method;
+        const meth2 = item._norm_method2;
 
-        // Granular key
         const key = `${d}_${m}_${lp}_${meth}_${meth2}`;
         costMap[key] = (costMap[key] || 0) + (item.total_cost || 0);
 
-        // Media aggregate key (for broader distribution if the sheet doesn't have LP breakdown for some rows)
         const mKey = `${d}_${m}`;
         mediaCostMap[mKey] = (mediaCostMap[mKey] || 0) + (item.total_cost || 0);
     });
 
-    // First pass: Try to assign costs directly
-    const assignedCosts = summaryData.map(record => {
-        const d = normalize(record.date);
-        const m = normalize(record.media);
-        const lp = normalize(record.lp_number);
-        const meth = normalize(record.method);
-        const meth2 = normalize(record.method2);
+    // Count summary records for distribution
+    normalizedSummary.forEach(record => {
+        const key = `${record._norm_date}_${record._norm_media}_${record._norm_lp}_${record._norm_method}_${record._norm_method2}`;
+        summaryCountMap[key] = (summaryCountMap[key] || 0) + 1;
+    });
 
-        const granularKey = `${d}_${m}_${lp}_${meth}_${meth2}`;
-        const directCost = costMap[granularKey];
+    // First pass: Assign direct costs
+    const assignedCosts = normalizedSummary.map(record => {
+        const key = `${record._norm_date}_${record._norm_media}_${record._norm_lp}_${record._norm_method}_${record._norm_method2}`;
+        const directCost = costMap[key];
 
         if (directCost !== undefined && directCost > 0) {
-            const count = summaryData.filter(r =>
-                normalize(r.date) === d &&
-                normalize(r.media) === m &&
-                normalize(r.lp_number) === lp &&
-                normalize(r.method) === meth &&
-                normalize(r.method2) === meth2
-            ).length;
-            return { ...record, cost: directCost / (count || 1), matched: true };
+            const count = summaryCountMap[key] || 1;
+            const costPerRecord = directCost / count;
+
+            // Track assigned costs for media fallback
+            const mKey = `${record._norm_date}_${record._norm_media}`;
+            assignedMediaCostMap[mKey] = (assignedMediaCostMap[mKey] || 0) + costPerRecord;
+
+            return { ...record, cost: costPerRecord, matched: true };
         }
+
+        // Track stats for second pass
+        const mKey = `${record._norm_date}_${record._norm_media}`;
+        unmatchedMediaCountMap[mKey] = (unmatchedMediaCountMap[mKey] || 0) + 1;
+
         return { ...record, cost: 0, matched: false };
     });
 
-    // Second pass: fallback distribution (Equal split) for any remaining aggregate media cost
-    // This handles cases where the cost sheet has a row for (Date, Media) but no specific LP info,
-    // and that row NOT being marked as '未振分'.
+    // Second pass: fallback distribution
     const finalData = assignedCosts.map(record => {
         if (record.matched) return record;
 
-        const d = normalize(record.date);
-        const m = normalize(record.media);
-        const dateMediaKey = `${d}_${m}`;
-        const totalMediaCost = mediaCostMap[dateMediaKey] || 0;
+        const mKey = `${record._norm_date}_${record._norm_media}`;
+        const totalMediaCost = mediaCostMap[mKey] || 0;
 
         if (totalMediaCost > 0) {
-            const alreadyAssigned = assignedCosts
-                .filter(r => r.matched && normalize(r.date) === d && normalize(r.media) === m)
-                .reduce((sum, r) => sum + r.cost, 0);
-
+            const alreadyAssigned = assignedMediaCostMap[mKey] || 0;
             const remainingCost = Math.max(0, totalMediaCost - alreadyAssigned);
 
             if (remainingCost > 0) {
-                const unmatchedForMediaCount = assignedCosts.filter(r =>
-                    !r.matched && normalize(r.date) === d && normalize(r.media) === m
-                ).length;
-
-                return { ...record, cost: remainingCost / (unmatchedForMediaCount || 1) };
+                const unmatchedCount = unmatchedMediaCountMap[mKey] || 1;
+                return { ...record, cost: remainingCost / unmatchedCount };
             }
         }
         return record;
     });
 
-    return finalData.map(({ matched, ...rest }) => rest);
+    // Remove internal normalization keys before returning
+    return finalData.map(({ matched, _norm_date, _norm_media, _norm_lp, _norm_method, _norm_method2, ...rest }) => rest);
 };
 
 /**

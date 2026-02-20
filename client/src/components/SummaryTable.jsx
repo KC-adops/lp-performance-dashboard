@@ -39,7 +39,7 @@ const SummaryTable = ({
                     <thead>
                         <tr className="main-header-row">
                             <th className="sticky-col"></th>
-                            <th colSpan={16}>実績</th>
+                            <th colSpan={15}>実績</th>
                             <th colSpan={5} className="est-header">想定</th>
                         </tr>
                         <tr className="sub-header-row">
@@ -56,7 +56,6 @@ const SummaryTable = ({
                             <th className="metric-col">成果数</th>
                             <th className="metric-col">成果率</th>
                             <th className="metric-col highlight-editable">単価</th>
-                            <th className="metric-col">成果率×単価</th>
                             <th className="metric-col">期待報酬</th>
                             <th className="metric-col">許容CPA</th>
                             <th className="metric-col">許容CPA<br />_差分込み</th>
@@ -105,7 +104,6 @@ const SummaryTable = ({
                                             />
                                         </div>
                                     </td>
-                                    <td className="val-cell">{fmtCurrency(row.cvrUnitPrice)}</td>
                                     <td className="val-cell">{fmtCurrency(row.allowableCpaPerItem)}</td>
                                     <td className="val-cell">{fmtCurrency(row.allowableCpaPerItem)}</td>
                                     <td className="val-cell" style={{ fontWeight: 600 }}>
@@ -152,7 +150,6 @@ const SummaryTable = ({
 
                             <td className="val-cell">{fmtNumber(metrics.results)}</td>
                             <td className="val-cell">{fmtPercent(metrics.conversionRate)}</td>
-                            <td className="val-cell">-</td>
                             <td className="val-cell">-</td>
                             <td className="val-cell">{fmtCurrency(metrics.allowableCpa)}</td>
                             <td className="val-cell">{fmtCurrency(metrics.allowableCpa)}</td>
