@@ -39,13 +39,14 @@ const SummaryTable = ({
                     <thead>
                         <tr className="main-header-row">
                             <th className="sticky-col"></th>
-                            <th colSpan={13}>実績</th>
+                            <th colSpan={16}>実績</th>
                             <th colSpan={5} className="est-header">想定</th>
                         </tr>
                         <tr className="sub-header-row">
                             <th className="sticky-col">商材名</th>
 
                             <th className="metric-col">mCV</th>
+                            <th className="metric-col">mCV比率</th>
                             <th className="metric-col">mCPA</th>
 
                             <th className="metric-col">rCV</th>
@@ -55,6 +56,8 @@ const SummaryTable = ({
                             <th className="metric-col">成果数</th>
                             <th className="metric-col">成果率</th>
                             <th className="metric-col highlight-editable">単価</th>
+                            <th className="metric-col">成果率×単価</th>
+                            <th className="metric-col">期待報酬</th>
                             <th className="metric-col">許容CPA</th>
                             <th className="metric-col">許容CPA<br />_差分込み</th>
                             <th className="metric-col">rCPA</th>
@@ -82,6 +85,7 @@ const SummaryTable = ({
                                     </td>
 
                                     <td className="val-cell">{fmtNumber(row.mCV)}</td>
+                                    <td className="val-cell">{fmtPercent((row.mCV / (metrics.mCV || 1)) * 100)}</td>
                                     <td className="val-cell">-</td>
 
                                     <td className="val-cell">{fmtNumber(row.rCV)}</td>
@@ -101,6 +105,8 @@ const SummaryTable = ({
                                             />
                                         </div>
                                     </td>
+                                    <td className="val-cell">{fmtCurrency(row.cvrUnitPrice)}</td>
+                                    <td className="val-cell">{fmtCurrency(row.allowableCpaPerItem)}</td>
                                     <td className="val-cell">{fmtCurrency(row.allowableCpaPerItem)}</td>
                                     <td className="val-cell" style={{ fontWeight: 600 }}>
                                         {fmtCurrency(row.allowableCpaPerItem * (1 + (diffRate || 0) / 100))}
@@ -137,6 +143,7 @@ const SummaryTable = ({
                             <td className="sticky-col">TOTAL</td>
 
                             <td className="val-cell">{fmtNumber(metrics.mCV)}</td>
+                            <td className="val-cell">100.00%</td>
                             <td className="val-cell">{fmtCurrency(metrics.mCPA)}</td>
 
                             <td className="val-cell">{fmtNumber(metrics.rCV)}</td>
@@ -146,6 +153,8 @@ const SummaryTable = ({
                             <td className="val-cell">{fmtNumber(metrics.results)}</td>
                             <td className="val-cell">{fmtPercent(metrics.conversionRate)}</td>
                             <td className="val-cell">-</td>
+                            <td className="val-cell">-</td>
+                            <td className="val-cell">{fmtCurrency(metrics.allowableCpa)}</td>
                             <td className="val-cell">{fmtCurrency(metrics.allowableCpa)}</td>
                             <td className="val-cell" style={{ fontWeight: 700 }}>
                                 {fmtCurrency(metrics.allowableCpa * (1 + (diffRate || 0) / 100))}

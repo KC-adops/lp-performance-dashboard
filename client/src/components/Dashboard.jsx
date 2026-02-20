@@ -3,6 +3,7 @@ import Filters from './Filters';
 import SummaryTable from './SummaryTable';
 import { fetchSummaryReport, fetchPVData, fetchCostData } from '../services/dataService';
 import { calculateCosts, aggregateMetrics, filterData, aggregateByMerchant, sortLPNumbers } from '../utils/calculations';
+import { clearCache } from '../utils/indexedDB';
 import '../styles/Dashboard.css';
 import ReportSection from './ReportSection';
 
@@ -16,54 +17,82 @@ const Dashboard = () => {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [isUsingMock, setIsUsingMock] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     useEffect(() => {
+        let isMounted = true;
+
         const loadData = async () => {
             try {
+                // SWR Phase 1: Try Cache
                 setIsLoading(true);
-                const [summary, cost] = await Promise.all([
-                    fetchSummaryReport(),
-                    fetchCostData()
+                const [summaryCache, costCache] = await Promise.all([
+                    fetchSummaryReport(false, true),
+                    fetchCostData(false, true)
                 ]);
 
-                const pv = [];
+                if (!isMounted) return;
 
-                if (summary.length > 0 &&
-                    summary[0].date === '2025-01-28' &&
-                    summary[0].lp_number === 'LP001' &&
-                    summary[0].merchant === 'acom') {
+                const hasCache = summaryCache.length > 0;
+
+                if (hasCache) {
+                    const pv = [];
+                    const withCosts = calculateCosts(summaryCache, pv, costCache);
+                    setProcessedData(withCosts);
+                    setFilterOptions({
+                        media: [...new Set(summaryCache.map(item => item.media))].filter(Boolean),
+                        method: [...new Set(summaryCache.map(item => item.method))].filter(Boolean),
+                        method2: [...new Set(summaryCache.map(item => item.method2))].filter(Boolean),
+                        lp_number: sortLPNumbers([...new Set(summaryCache.map(item => item.lp_number))].filter(Boolean))
+                    });
+                    setIsLoading(false); // Hide skeleton
+                    setIsRefreshing(true); // Show refreshing badge
+                } else {
+                    // Absolute first load, we must keep isLoading=true to show skeleton
+                    setIsLoading(true);
+                }
+
+                // SWR Phase 2: Fetch Fresh Network Data
+                const [summaryFresh, costFresh] = await Promise.all([
+                    fetchSummaryReport(true, false),
+                    fetchCostData(true, false)
+                ]);
+
+                if (!isMounted) return;
+
+                const pvFresh = [];
+
+                if (summaryFresh.length > 0 &&
+                    summaryFresh[0].date === '2025-01-28' &&
+                    summaryFresh[0].lp_number === 'LP001' &&
+                    summaryFresh[0].merchant === 'acom') {
                     setIsUsingMock(true);
                 } else {
                     setIsUsingMock(false);
                 }
 
-                const withCosts = calculateCosts(summary, pv, cost);
-                setProcessedData(withCosts);
-
+                const withCostsFresh = calculateCosts(summaryFresh, pvFresh, costFresh);
+                setProcessedData(withCostsFresh);
                 setFilterOptions({
-                    media: [...new Set(summary.map(item => item.media))].filter(Boolean),
-                    method: [...new Set(summary.map(item => item.method))].filter(Boolean),
-                    method2: [...new Set(summary.map(item => item.method2))].filter(Boolean),
-                    lp_number: sortLPNumbers([...new Set(summary.map(item => item.lp_number))].filter(Boolean))
+                    media: [...new Set(summaryFresh.map(item => item.media))].filter(Boolean),
+                    method: [...new Set(summaryFresh.map(item => item.method))].filter(Boolean),
+                    method2: [...new Set(summaryFresh.map(item => item.method2))].filter(Boolean),
+                    lp_number: sortLPNumbers([...new Set(summaryFresh.map(item => item.lp_number))].filter(Boolean))
                 });
             } catch (err) {
                 console.error('Error loading data:', err);
-                setError('データの読み込みに失敗しました。');
+                if (isMounted) setError('データの読み込みに失敗しました。');
             } finally {
-                setIsLoading(false);
+                if (isMounted) {
+                    setIsLoading(false);
+                    setIsRefreshing(false);
+                }
             }
         };
 
         loadData();
+        return () => { isMounted = false; };
     }, []);
-
-    if (isLoading) return (
-        <div className="loading-container">
-            <div className="loader"></div>
-            <p>データを読み込んでいます...</p>
-        </div>
-    );
 
     if (error) return <div className="error-message">{error}</div>;
 
@@ -75,9 +104,8 @@ const Dashboard = () => {
                     <div className="header-badges">
                         <span className="badge">LIVE DATA</span>
                         <span className="badge secondary">SCENARIO COMPARISON</span>
-                        {isUsingMock && (
-                            <span className="mock-badge">Using Mock Data</span>
-                        )}
+                        {isUsingMock && <span className="mock-badge">Using Mock Data</span>}
+                        {isRefreshing && <span className="badge" style={{ backgroundColor: '#eab308', color: '#fff' }}>🔄 REFRESHING</span>}
                     </div>
                 </div>
                 <div className="header-actions">
@@ -95,7 +123,10 @@ const Dashboard = () => {
                         <span className="btn-icon">💰</span>
                         広告費 (Sheets)
                     </button>
-                    <button className="btn-primary" onClick={() => window.location.reload()}>
+                    <button className="btn-primary" onClick={async () => {
+                        await clearCache();
+                        window.location.reload();
+                    }}>
                         <span className="btn-icon">🔄</span>
                         全体更新
                     </button>
@@ -104,21 +135,32 @@ const Dashboard = () => {
 
             <div className="dashboard-content">
                 <main className="main-content">
-                    <ReportSection
-                        sectionId="a"
-                        sectionName="SCENARIO A"
-                        processedData={processedData}
-                        filterOptions={filterOptions}
-                    />
+                    {isLoading ? (
+                        <div className="skeleton-container">
+                            <div className="skeleton-line" style={{ width: '30%', height: '32px' }}></div>
+                            <div className="skeleton-box" style={{ width: '100%', height: '400px', marginTop: '20px' }}></div>
+                            <div className="skeleton-line" style={{ width: '20%', height: '32px', marginTop: '40px' }}></div>
+                            <div className="skeleton-box" style={{ width: '100%', height: '400px', marginTop: '20px' }}></div>
+                        </div>
+                    ) : (
+                        <>
+                            <ReportSection
+                                sectionId="a"
+                                sectionName="SCENARIO A"
+                                processedData={processedData}
+                                filterOptions={filterOptions}
+                            />
 
-                    <div className="section-divider"></div>
+                            <div className="section-divider"></div>
 
-                    <ReportSection
-                        sectionId="b"
-                        sectionName="SCENARIO B"
-                        processedData={processedData}
-                        filterOptions={filterOptions}
-                    />
+                            <ReportSection
+                                sectionId="b"
+                                sectionName="SCENARIO B"
+                                processedData={processedData}
+                                filterOptions={filterOptions}
+                            />
+                        </>
+                    )}
                 </main>
             </div>
         </div>

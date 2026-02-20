@@ -162,6 +162,7 @@ export const aggregateByMerchant = (data, unitPrices = UNIT_PRICES, unitEstRates
             const rCVR = stat.mCV > 0 ? (stat.rCV / stat.mCV) * 100 : 0;
             const rCVRatio = totalRCV > 0 ? (stat.rCV / totalRCV) * 100 : 0;
             const conversionRate = stat.rCV > 0 ? (stat.results / stat.rCV) * 100 : 0;
+            const cvrUnitPrice = (conversionRate / 100) * unitPrice;
 
             // Allowable CPA = rCV Ratio × Conversion Rate × Unit Price
             // Divide by 10000 because both Ratio and Rate are in percent (0-100)
@@ -182,6 +183,7 @@ export const aggregateByMerchant = (data, unitPrices = UNIT_PRICES, unitEstRates
                 rCVR,
                 rCVRatio,
                 conversionRate,
+                cvrUnitPrice,
                 allowableCpaPerItem,
                 actualRoas,
                 rCPA,

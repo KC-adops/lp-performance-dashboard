@@ -227,3 +227,28 @@
         border-bottom: 1px solid var(--border-color);
     }
 }
+
+/* Skeleton Loader */
+.skeleton-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-line {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+}
+
+.skeleton-box {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+}
+
+@keyframes skeleton-pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 0.3; }
+    100% { opacity: 0.6; }
+}

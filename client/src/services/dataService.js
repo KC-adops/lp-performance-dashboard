@@ -28,11 +28,12 @@ const mockCostData = [
 /**
  * Fetch Summary Report from Google Sheets or fallback to mock data
  */
-export const fetchSummaryReport = async () => {
+export const fetchSummaryReport = async (forceRefresh = false, cacheOnly = false) => {
   try {
-    const data = await fetchAndParseSheet('AFAD_LP_Summary_Report');
+    const data = await fetchAndParseSheet('AFAD_LP_Summary_Report', '', undefined, forceRefresh, cacheOnly);
 
     if (data === null) {
+      if (cacheOnly) return []; // Don't return mock data on a cache miss during SWR
       console.log('fetchSummaryReport: API Key/ID missing, returning mock data.');
       return mockSummaryReportData;
     }
@@ -109,11 +110,12 @@ export const fetchSummaryReport = async () => {
 /**
  * Fetch PV Data from Google Sheets or fallback to mock data
  */
-export const fetchPVData = async () => {
+export const fetchPVData = async (forceRefresh = false, cacheOnly = false) => {
   try {
-    const data = await fetchAndParseSheet('SquadBeyond_Data');
+    const data = await fetchAndParseSheet('SquadBeyond_Data', '', undefined, forceRefresh, cacheOnly);
 
     if (data === null) {
+      if (cacheOnly) return [];
       console.log('Using mock PV data');
       return mockPvData;
     }
@@ -136,20 +138,22 @@ export const fetchPVData = async () => {
 /**
  * Fetch Cost Data from the consolidated cost spreadsheet
  */
-export const fetchCostData = async () => {
+export const fetchCostData = async (forceRefresh = false, cacheOnly = false) => {
   const COST_SPREADSHEET_ID = import.meta.env.VITE_COST_SPREADSHEET_ID;
 
   try {
     // If no cost spreadsheet ID is configured, fallback to mock data
     if (!COST_SPREADSHEET_ID) {
+      if (cacheOnly) return [];
       console.warn('VITE_COST_SPREADSHEET_ID not configured. Using mock data.');
       return mockCostData;
     }
 
-    const data = await fetchAndParseSheet('広告費まとめ_LP別', '', COST_SPREADSHEET_ID);
-    console.log('fetchCostData: RAW DATA SAMPLE:', data ? data.slice(0, 3) : 'NULL');
+    const data = await fetchAndParseSheet('広告費まとめ_LP別', '', COST_SPREADSHEET_ID, forceRefresh, cacheOnly);
+    if (!cacheOnly) console.log('fetchCostData: RAW DATA SAMPLE:', data ? data.slice(0, 3) : 'NULL');
 
     if (!data || data.length === 0) {
+      if (cacheOnly) return [];
       console.warn('No cost data found in the consolidated sheet.');
       return mockCostData;
     }
