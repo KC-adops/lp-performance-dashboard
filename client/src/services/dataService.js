@@ -1,6 +1,6 @@
 import { fetchAndParseSheet } from './googleSheetsClient';
 
-// Mock Data for AFAD_LP_Summary_Report (Fallback)
+// Mock Data for Summary_Report (Fallback)
 const mockSummaryReportData = [
   { date: '2025-01-28', lp_number: 'LP001', media: 'Acom', method: 'Direct', method2: 'TestA', merchant: 'acom', mCV: 15, rCV: 5, results: 2, cost: 0 },
   { date: '2025-01-28', lp_number: 'LP001', media: 'Acom', method: 'Direct', method2: 'TestB', merchant: 'promis', mCV: 20, rCV: 8, results: 1, cost: 0 },
@@ -30,7 +30,7 @@ const mockCostData = [
  */
 export const fetchSummaryReport = async (forceRefresh = false, cacheOnly = false) => {
   try {
-    const data = await fetchAndParseSheet('AFAD_LP_Summary_Report', '', undefined, forceRefresh, cacheOnly);
+    const data = await fetchAndParseSheet('Summary_Report', '', undefined, forceRefresh, cacheOnly);
 
     if (data === null) {
       if (cacheOnly) return []; // Don't return mock data on a cache miss during SWR
