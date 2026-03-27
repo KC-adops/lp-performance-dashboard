@@ -104,7 +104,7 @@ const SummaryTable = ({
                                             />
                                         </div>
                                     </td>
-                                    <td className="val-cell">{fmtCurrency(row.allowableCpaPerItem)}</td>
+                                    <td className="val-cell">{fmtCurrency(row.cvrUnitPrice)}</td>
                                     <td className="val-cell">{fmtCurrency(row.allowableCpaPerItem)}</td>
                                     <td className="val-cell" style={{ fontWeight: 600 }}>
                                         {fmtCurrency(row.allowableCpaPerItem * (1 + (diffRate || 0) / 100))}
@@ -151,7 +151,7 @@ const SummaryTable = ({
                             <td className="val-cell">{fmtNumber(metrics.results)}</td>
                             <td className="val-cell">{fmtPercent(metrics.conversionRate)}</td>
                             <td className="val-cell">-</td>
-                            <td className="val-cell">{fmtCurrency(metrics.allowableCpa)}</td>
+                            <td className="val-cell">{fmtCurrency(metrics.cvrUnitPrice)}</td>
                             <td className="val-cell">{fmtCurrency(metrics.allowableCpa)}</td>
                             <td className="val-cell" style={{ fontWeight: 700 }}>
                                 {fmtCurrency(metrics.allowableCpa * (1 + (diffRate || 0) / 100))}

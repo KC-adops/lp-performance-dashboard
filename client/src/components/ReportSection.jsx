@@ -105,55 +105,72 @@ const ReportSection = ({ sectionId, sectionName, processedData, filterOptions })
     };
 
     const handleDownloadCSV = () => {
-        // Prepare data for export
-        const exportData = merchantData.map(row => ({
-            '商材名': row.merchant?.toUpperCase(),
-            'mCV': row.mCV,
-            'mCV比率': ((row.mCV / (metrics.mCV || 1)) * 100).toFixed(2) + '%',
-            'mCPA': Math.round(row.mCPA || 0),
-            'rCV': row.rCV,
-            'rCVR': row.rCVR.toFixed(2) + '%',
-            '成果数': row.results,
-            '成果率': row.conversionRate.toFixed(2) + '%',
-            '単価': unitPrices[row.merchant?.toLowerCase()] || 0,
-            '期待報酬': Math.round(row.allowableCpaPerItem || 0),
-            '許容CPA': Math.round(row.allowableCpaPerItem || 0),
-            '許容CPA_差分込み': Math.round((row.allowableCpaPerItem || 0) * (1 + (diffRate || 0) / 100)),
-            'rCPA': Math.round(row.rCPA || 0),
-            '広告費': Math.round(row.cost || 0),
-            'ROAS(実績)': row.actualRoas.toFixed(2) + '%',
-            '成果率(想定)': (unitEstRates[row.merchant?.toLowerCase()] || 0).toFixed(2) + '%',
-            '許容CPA(想定)': Math.round(row.estAllowableCpa || 0),
-            '差分率': diffRate + '%',
-            '許容CPA(想定)_差分込み': Math.round((row.estAllowableCpa || 0) * (1 + (diffRate || 0) / 100)),
-            'ROAS(想定)': row.estRoas.toFixed(2) + '%'
-        }));
+        try {
+            // Explicit column order for CSV
+            const CSV_HEADERS = [
+                '商材名', 'mCV', 'mCV比率', 'mCPA', 'rCV', 'rCVR', 'rCV比率',
+                '成果数', '成果率', '単価', '期待報酬', '許容CPA', '許容CPA_差分込み',
+                'rCPA', '広告費', 'ROAS(実績)', '成果率(想定)', '許容CPA(想定)',
+                '差分率', '許容CPA(想定)_差分込み', 'ROAS(想定)'
+            ];
 
-        // Add Total row
-        exportData.push({
-            '商材名': 'TOTAL',
-            'mCV': metrics.mCV,
-            'mCV比率': '100.00%',
-            'mCPA': Math.round(metrics.mCPA || 0),
-            'rCV': metrics.rCV,
-            'rCVR': metrics.rCVR.toFixed(2) + '%',
-            '成果数': metrics.results,
-            '成果率': metrics.conversionRate.toFixed(2) + '%',
-            '単価': '-',
-            '期待報酬': Math.round(metrics.allowableCpa || 0),
-            '許容CPA': Math.round(metrics.allowableCpa || 0),
-            '許容CPA_差分込み': Math.round((metrics.allowableCpa || 0) * (1 + (diffRate || 0) / 100)),
-            'rCPA': Math.round(metrics.rCPA || 0),
-            '広告費': Math.round(metrics.cost || 0),
-            'ROAS(実績)': metrics.actualRoas.toFixed(2) + '%',
-            '成果率(想定)': '-',
-            '許容CPA(想定)': Math.round(metrics.estAllowableCpa || 0),
-            '差分率': diffRate + '%',
-            '許容CPA(想定)_差分込み': Math.round((metrics.estAllowableCpa || 0) * (1 + (diffRate || 0) / 100)),
-            'ROAS(想定)': metrics.estRoas.toFixed(2) + '%'
-        });
+            const fmt = (val, digits = 2) => ((val || 0).toFixed(digits)) + '%';
 
-        downloadCSV(exportData, `${sectionName}_report_${new Date().toISOString().split('T')[0]}.csv`);
+            // Prepare data for export
+            const exportData = merchantData.map(row => ({
+                '商材名': row.merchant?.toUpperCase() || '',
+                'mCV': row.mCV || 0,
+                'mCV比率': fmt((row.mCV / (metrics.mCV || 1)) * 100),
+                'mCPA': Math.round(row.mCPA || 0),
+                'rCV': row.rCV || 0,
+                'rCVR': fmt(row.rCVR),
+                'rCV比率': fmt(row.rCVRatio),
+                '成果数': row.results || 0,
+                '成果率': fmt(row.conversionRate),
+                '単価': unitPrices[row.merchant?.toLowerCase()] || 0,
+                '期待報酬': Math.round(row.cvrUnitPrice || 0),
+                '許容CPA': Math.round(row.allowableCpaPerItem || 0),
+                '許容CPA_差分込み': Math.round((row.allowableCpaPerItem || 0) * (1 + (diffRate || 0) / 100)),
+                'rCPA': Math.round(row.rCPA || 0),
+                '広告費': Math.round(row.cost || 0),
+                'ROAS(実績)': fmt(row.actualRoas),
+                '成果率(想定)': fmt(unitEstRates[row.merchant?.toLowerCase()] || 0),
+                '許容CPA(想定)': Math.round(row.estAllowableCpa || 0),
+                '差分率': (diffRate || 0) + '%',
+                '許容CPA(想定)_差分込み': Math.round((row.estAllowableCpa || 0) * (1 + (diffRate || 0) / 100)),
+                'ROAS(想定)': fmt(row.estRoas)
+            }));
+
+            // Add Total row
+            exportData.push({
+                '商材名': 'TOTAL',
+                'mCV': metrics.mCV || 0,
+                'mCV比率': '100.00%',
+                'mCPA': Math.round(metrics.mCPA || 0),
+                'rCV': metrics.rCV || 0,
+                'rCVR': fmt(metrics.rCVR),
+                'rCV比率': '100.00%',
+                '成果数': metrics.results || 0,
+                '成果率': fmt(metrics.conversionRate),
+                '単価': '-',
+                '期待報酬': Math.round(metrics.cvrUnitPrice || 0),
+                '許容CPA': Math.round(metrics.allowableCpa || 0),
+                '許容CPA_差分込み': Math.round((metrics.allowableCpa || 0) * (1 + (diffRate || 0) / 100)),
+                'rCPA': Math.round(metrics.rCPA || 0),
+                '広告費': Math.round(metrics.cost || 0),
+                'ROAS(実績)': fmt(metrics.actualRoas),
+                '成果率(想定)': '-',
+                '許容CPA(想定)': Math.round(metrics.estAllowableCpa || 0),
+                '差分率': (diffRate || 0) + '%',
+                '許容CPA(想定)_差分込み': Math.round((metrics.estAllowableCpa || 0) * (1 + (diffRate || 0) / 100)),
+                'ROAS(想定)': fmt(metrics.estRoas)
+            });
+
+            downloadCSV(exportData, `${sectionName}_report_${new Date().toISOString().split('T')[0]}.csv`, CSV_HEADERS);
+        } catch (err) {
+            console.error('CSVダウンロードエラー:', err);
+            alert('CSVダウンロードに失敗しました: ' + err.message);
+        }
     };
 
     return (

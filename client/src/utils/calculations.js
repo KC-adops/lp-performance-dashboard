@@ -284,6 +284,7 @@ export const aggregateMetrics = (data, unitPrices = UNIT_PRICES, unitEstRates = 
 
     const actualRoas = totals.cost > 0 ? (totalActualRevenue / totals.cost) * 100 : 0;
     const estRoas = totals.cost > 0 ? (totalWeightedEstRoasNumerator / totals.cost) * 100 : 0;
+    const cvrUnitPrice = totals.rCV > 0 ? (totalActualRevenue / totals.rCV) : 0;
 
     return {
         ...totals,
@@ -294,7 +295,8 @@ export const aggregateMetrics = (data, unitPrices = UNIT_PRICES, unitEstRates = 
         conversionRate,
         allowableCpa: totalAllowableCpa,
         estAllowableCpa: totalEstAllowableCpa,
-        estRoas
+        estRoas,
+        cvrUnitPrice
     };
 };
 
